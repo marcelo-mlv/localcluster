@@ -1,0 +1,13 @@
+# AeroSOuDA — host-side dependencies
+# Python 3.8.20 required (matches the conda environment specification)
+#
+# Install with:
+#   pip install -r requirements.txt
+#
+# NOTE: asapy and asa-client are NOT listed here — they are private libraries
+# distributed separately by the ASA project team.  See README.md for details.
+
+rich>=13.0.0
+questionary>=2.0.0
+pyyaml>=6.0
+pandas>=1.3.0
