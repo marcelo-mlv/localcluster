@@ -1,0 +1,50 @@
+# ─── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+env/
+venv/
+.venv/
+ENV/
+
+# ─── Project data (generated / machine-specific) ──────────────────────────────
+
+# Input CSVs.
+inputs/*.csv
+
+# Input YAMLs.
+scenarios/*.yaml
+
+# Generated outputs — never committed; re-created on every run.
+outputs/*
+!outputs/.gitkeep
+
+# Spark event logs — binary/large, machine-specific.
+events/*
+!events/.gitkeep
+
+# Ignore all markdown files except the project README.
+*.md
+!README.md
+!readme.md
+
+# ─── Docker ───────────────────────────────────────────────────────────────────
+.env
+*.log
+
+# ─── Editor / OS ──────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
