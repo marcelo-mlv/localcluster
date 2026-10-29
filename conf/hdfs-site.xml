@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  HDFS-specific configuration.
+  Mounted inside HDFS containers (namenode + datanode).
+-->
+<configuration>
+  <property>
+    <name>dfs.replication</name>
+    <value>1</value>
+    <description>Replication factor 1 — single datanode in this local cluster.</description>
+  </property>
+
+  <property>
+    <name>dfs.permissions.enabled</name>
+    <value>false</value>
+    <description>Disable HDFS permissions for local development.</description>
+  </property>
+
+  <property>
+    <name>dfs.client.use.datanode.hostname</name>
+    <value>true</value>
+    <description>Use Docker container hostnames for block transfers.</description>
+  </property>
+
+  <property>
+    <name>dfs.datanode.hostname</name>
+    <value>datanode</value>
+  </property>
+
+  <property>
+    <name>dfs.blocksize</name>
+    <value>134217728</value>
+    <description>128 MB block size.</description>
+  </property>
+</configuration>

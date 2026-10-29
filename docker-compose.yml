@@ -1,0 +1,184 @@
+# AeroSOuDA local cluster — Apache Spark + HDFS
+# ─────────────────────────────────────────────────────────────────────────────
+# Compatible with Docker Desktop (Linux/macOS) and docker.io Ubuntu package.
+#
+# If running docker.io on Linux, make sure volumes are writable by UID 185
+# (the spark user inside the container):
+#   chmod 777 events/ inputs/ outputs/ scenarios/
+#
+# Web UIs:
+#   HDFS NameNode:     http://localhost:9870
+#   Spark master:      http://localhost:8080
+#   Spark history:     http://localhost:18080
+#   Spark workers:     http://localhost:8081 … 8084
+# ─────────────────────────────────────────────────────────────────────────────
+
+x-spark-common: &spark-common
+  build: .
+  env_file:
+    - path: ./conf/spark.env
+      required: false   # optional override file for resource tuning
+  environment:
+    SPARK_NO_DAEMONIZE: "1"
+    HADOOP_CONF_DIR: /etc/hadoop
+  volumes:
+    - ./scripts:/opt/spark/scripts
+    - ./events:/opt/spark/events
+    - ./outputs:/opt/spark/outputs
+    - ./inputs:/opt/spark/inputs
+    - ./conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
+    - ./conf/core-site.xml:/etc/hadoop/core-site.xml
+    - ./scenarios:/opt/spark/scenarios
+  networks:
+    - spark-net
+
+services:
+
+  # ── HDFS NameNode ──────────────────────────────────────────────────────────
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    hostname: namenode
+    restart: unless-stopped
+    environment:
+      - CLUSTER_NAME=aerosouda
+    env_file:
+      - ./conf/hadoop.env
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    volumes:
+      - hdfs-namenode:/hadoop/dfs/name
+      - ./conf/hdfs-site.xml:/etc/hadoop/hdfs-site.xml
+    networks:
+      spark-net:
+        aliases:
+          - namenode
+
+  # ── HDFS DataNode ──────────────────────────────────────────────────────────
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode
+    hostname: datanode
+    restart: unless-stopped
+    depends_on:
+      - namenode
+    env_file:
+      - ./conf/hadoop.env
+    volumes:
+      - hdfs-datanode:/hadoop/dfs/data
+      - ./conf/hdfs-site.xml:/etc/hadoop/hdfs-site.xml
+    networks:
+      spark-net:
+        aliases:
+          - datanode
+
+  # ── Spark History Server ───────────────────────────────────────────────────
+  spark-history-server:
+    <<: *spark-common
+    container_name: spark-history-server
+    hostname: spark-history-server
+    command: /opt/spark/sbin/start-history-server.sh --properties-file /opt/spark/conf/spark-defaults.conf
+    ports:
+      - "18080:18080"
+
+  # ── Spark Master ───────────────────────────────────────────────────────────
+  spark-master:
+    <<: *spark-common
+    container_name: spark-master
+    hostname: spark-master
+    command: /opt/spark/sbin/start-master.sh
+    environment:
+      SPARK_NO_DAEMONIZE: "1"
+      SPARK_MASTER_HOST: spark-master
+      SPARK_MASTER_PORT: 7077
+      SPARK_MASTER_WEBUI_PORT: 8080
+      HADOOP_CONF_DIR: /etc/hadoop
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+      - "4040:4040"
+    depends_on:
+      - namenode
+      - datanode
+
+  # ── Spark Workers ──────────────────────────────────────────────────────────
+  spark-worker-1:
+    <<: *spark-common
+    container_name: spark-worker-1
+    hostname: spark-worker-1
+    command: /opt/spark/sbin/start-worker.sh spark://spark-master:7077
+    environment:
+      SPARK_NO_DAEMONIZE: "1"
+      SPARK_LOCAL_HOSTNAME: spark-worker-1
+      SPARK_MASTER_URL: spark://spark-master:7077
+      SPARK_WORKER_CORES: ${SPARK_WORKER_CORES:-2}
+      SPARK_WORKER_MEMORY: ${SPARK_WORKER_MEMORY:-2G}
+      SPARK_WORKER_WEBUI_PORT: 8081
+      HADOOP_CONF_DIR: /etc/hadoop
+    ports:
+      - "8081:8081"
+    depends_on:
+      - spark-master
+
+  spark-worker-2:
+    <<: *spark-common
+    container_name: spark-worker-2
+    hostname: spark-worker-2
+    command: /opt/spark/sbin/start-worker.sh spark://spark-master:7077
+    environment:
+      SPARK_NO_DAEMONIZE: "1"
+      SPARK_LOCAL_HOSTNAME: spark-worker-2
+      SPARK_MASTER_URL: spark://spark-master:7077
+      SPARK_WORKER_CORES: ${SPARK_WORKER_CORES:-2}
+      SPARK_WORKER_MEMORY: ${SPARK_WORKER_MEMORY:-2G}
+      SPARK_WORKER_WEBUI_PORT: 8082
+      HADOOP_CONF_DIR: /etc/hadoop
+    ports:
+      - "8082:8082"
+    depends_on:
+      - spark-master
+
+  spark-worker-3:
+    <<: *spark-common
+    container_name: spark-worker-3
+    hostname: spark-worker-3
+    command: /opt/spark/sbin/start-worker.sh spark://spark-master:7077
+    environment:
+      SPARK_NO_DAEMONIZE: "1"
+      SPARK_LOCAL_HOSTNAME: spark-worker-3
+      SPARK_MASTER_URL: spark://spark-master:7077
+      SPARK_WORKER_CORES: ${SPARK_WORKER_CORES:-2}
+      SPARK_WORKER_MEMORY: ${SPARK_WORKER_MEMORY:-2G}
+      SPARK_WORKER_WEBUI_PORT: 8083
+      HADOOP_CONF_DIR: /etc/hadoop
+    ports:
+      - "8083:8083"
+    depends_on:
+      - spark-master
+
+  spark-worker-4:
+    <<: *spark-common
+    container_name: spark-worker-4
+    hostname: spark-worker-4
+    command: /opt/spark/sbin/start-worker.sh spark://spark-master:7077
+    environment:
+      SPARK_NO_DAEMONIZE: "1"
+      SPARK_LOCAL_HOSTNAME: spark-worker-4
+      SPARK_MASTER_URL: spark://spark-master:7077
+      SPARK_WORKER_CORES: ${SPARK_WORKER_CORES:-2}
+      SPARK_WORKER_MEMORY: ${SPARK_WORKER_MEMORY:-2G}
+      SPARK_WORKER_WEBUI_PORT: 8084
+      HADOOP_CONF_DIR: /etc/hadoop
+    ports:
+      - "8084:8084"
+    depends_on:
+      - spark-master
+
+networks:
+  spark-net:
+    driver: bridge
+
+volumes:
+  hdfs-namenode:
+  hdfs-datanode:

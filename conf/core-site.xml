@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  Hadoop core configuration for Spark workers to connect to the local HDFS namenode.
+  Mounted inside all Spark containers at /etc/hadoop/core-site.xml.
+-->
+<configuration>
+  <property>
+    <name>fs.defaultFS</name>
+    <value>hdfs://namenode:9000</value>
+    <description>Default HDFS namenode URI. All HDFS paths are resolved against this.</description>
+  </property>
+
+  <property>
+    <name>hadoop.http.staticuser.user</name>
+    <value>root</value>
+  </property>
+
+  <property>
+    <name>dfs.client.use.datanode.hostname</name>
+    <value>true</value>
+    <description>Use hostnames instead of IPs for data transfers (required for Docker networking).</description>
+  </property>
+</configuration>
